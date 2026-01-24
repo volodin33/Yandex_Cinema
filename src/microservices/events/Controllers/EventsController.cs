@@ -9,9 +9,6 @@ namespace events.Controllers;
 [Route("api/events")]
 public sealed class EventsController(ILogger<EventsController> logger, IMediator mediator) : ControllerBase
 {
-    [HttpGet("health")]
-    public ActionResult<HealthApiResponse> Health() => Ok(new HealthApiResponse { Status = true });
-
     [HttpPost("movie")]
     public async Task<ActionResult<EventApiResponse>> CreateMovieEvent([FromBody] MovieEventApiRequest movieApiRequest)
     {

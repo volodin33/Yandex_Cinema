@@ -7,13 +7,7 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:8082",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Kafka__Host": "kafka:9094",
-        "Kafka__ClientId": "events-service",
-        "Kafka__GroupId": "events-service",
-        "Kafka__Topics__Movie": "movie-events",
-        "Kafka__Topics__User": "user-events",
-        "Kafka__Topics__Payment": "payment-events"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

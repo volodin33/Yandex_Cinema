@@ -37,8 +37,9 @@ public abstract class KafkaConsumer<T>(string topic, IOptions<KafkaOptions> opti
                 HandleMessage(msg);
                 consumer.Commit(result);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ce)
             {
+                logger.LogError(ce, $"ConsumeException (canceled). Topic={topic}. {ce.Message}");
                 break;
             }
             catch (Exception ex)
@@ -47,6 +48,7 @@ public abstract class KafkaConsumer<T>(string topic, IOptions<KafkaOptions> opti
             }
         }
 
+        logger.LogInformation($"Consumer stopped. Topic={topic}, GroupId={kafkaOptions.GroupId}");
         consumer.Close();
         return Task.CompletedTask;
     }
