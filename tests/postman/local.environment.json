@@ -16,13 +16,13 @@
     },
     {
       "key": "eventsServiceUrl",
-      "value": "http://127.0.0.1:8082",
+      "value": "http://cinemaabyss.example.com",
       "type": "default",
       "enabled": true
     },
     {
       "key": "proxyServiceUrl",
-      "value": "http://127.0.0.1:8000",
+      "value": "http://cinemaabyss.example.com",
       "type": "default",
       "enabled": true
     }

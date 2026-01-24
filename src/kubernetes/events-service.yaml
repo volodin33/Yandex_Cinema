@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: events-service
-          image: ghcr.io/volodin33/yandex_cinema/events-service:latest
+          image: ghcr.io/volodin33/yandex_cinema/events-service:sha-ff8396f
           imagePullPolicy: Always
           ports:
             - containerPort: 8082

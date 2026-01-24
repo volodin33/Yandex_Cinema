@@ -26,3 +26,14 @@ data:
   Kafka__Topics__Movie: "movie-events"
   Kafka__Topics__User: "user-events"
   Kafka__Topics__Payment: "payment-events"
+  
+  # Proxy
+  Proxy__Routes__0__PathPrefix: "/api/movies"
+  Proxy__Routes__0__MigrationPercent: "50"
+  Proxy__Routes__0__MigrationUrl: "http://movies-service:8081/api/movies"
+  Proxy__Routes__0__OldUrl: "http://monolith:8080/api/movies"
+
+  Proxy__Routes__1__PathPrefix: "/api/users"
+  Proxy__Routes__1__MigrationPercent: "0"
+  Proxy__Routes__1__MigrationUrl: ""
+  Proxy__Routes__1__OldUrl: "http://monolith:8080/api/users"
