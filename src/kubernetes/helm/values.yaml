@@ -1,12 +1,6 @@
-# Global settings
 global:
   namespace: cinemaabyss
   domain: cinemaabyss.example.com
-
-# Image pull secrets
-imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
-# Database configuration
 database:
   host: postgres
   port: 5432
@@ -33,7 +27,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/volodin33/yandex_cinema/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,8 +47,8 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
-    tag: latest
+    repository: ghcr.io/volodin33/yandex_cinema/proxy-service
+    tag: sha-ff8396f
     pullPolicy: Always
   replicas: 1
   resources:
@@ -65,7 +59,7 @@ proxyService:
       cpu: 100m
       memory: 128Mi
   service:
-    port: 80
+    port: 8000
     targetPort: 8000
     type: ClusterIP
 
@@ -73,7 +67,7 @@ proxyService:
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/volodin33/yandex_cinema/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,8 +87,8 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
-    tag: latest
+    repository: ghcr.io/volodin33/yandex_cinema/events-service
+    tag: sha-f0d8daa
     pullPolicy: Always
   replicas: 1
   resources:
@@ -129,15 +123,15 @@ kafka:
     size: 5Gi
     accessMode: ReadWriteOnce
   topics:
-    - name: movie-events
-      partitions: 1
-      replicationFactor: 1
-    - name: user-events
-      partitions: 1
-      replicationFactor: 1
-    - name: payment-events
-      partitions: 1
-      replicationFactor: 1
+  - name: movie-events
+    partitions: 1
+    replicationFactor: 1
+  - name: user-events
+    partitions: 1
+    replicationFactor: 1
+  - name: payment-events
+    partitions: 1
+    replicationFactor: 1
 
 # Zookeeper configuration
 zookeeper:
@@ -165,21 +159,35 @@ ingress:
   className: nginx
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
   hosts:
-    - host: cinemaabyss.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-          service: proxy-service
-          port: 80
-        - path: /api/events
-          pathType: Prefix
-          service: events-service
-          port: 8082
-
-# Application configuration
+  - host: cinemaabyss.example.com
+    paths:
+    - path: /
+      pathType: Prefix
+      service: proxy-service
+      port: 80
+    - path: /api/events
+      pathType: Prefix
+      service: events-service
+      port: 8082
 config:
-  # Strangler Fig configuration
-  gradualMigration: "true"
-  moviesMigrationPercent: "100"
+  gradualMigration: 'true'
+  moviesMigrationPercent: '100'
+  kafka:
+    host: kafka:9092
+    clientId: events-service
+    groupId: events-service
+    topics:
+      movie: movie-events
+      user: user-events
+      payment: payment-events
+  proxyRoutes:
+  - pathPrefix: /api/movies
+    migrationPercent: '50'
+    migrationUrl: http://movies-service:8081/api/movies
+    oldUrl: http://monolith:8080/api/movies
+  - pathPrefix: /api/users
+    migrationPercent: '0'
+    migrationUrl: ''
+    oldUrl: http://monolith:8080/api/users

@@ -15,8 +15,24 @@ data:
 
   # Service URLs
   MONOLITH_URL: "http://monolith:{{ .Values.monolith.service.port }}"
-  MOVIES_SERVICE_URL: "http://movies:{{ .Values.moviesService.service.port }}"
-  
+  MOVIES_SERVICE_URL: "http://movies-service:{{ .Values.moviesService.service.port }}"
+
   # Strangler Fig configuration
   GRADUAL_MIGRATION: {{ .Values.config.gradualMigration | quote }}
   MOVIES_MIGRATION_PERCENT: {{ .Values.config.moviesMigrationPercent | quote }}
+
+  # Kafka (client config for events-service)
+  Kafka__Host: {{ .Values.config.kafka.host | quote }}
+  Kafka__ClientId: {{ .Values.config.kafka.clientId | quote }}
+  Kafka__GroupId: {{ .Values.config.kafka.groupId | quote }}
+  Kafka__Topics__Movie: {{ .Values.config.kafka.topics.movie | quote }}
+  Kafka__Topics__User: {{ .Values.config.kafka.topics.user | quote }}
+  Kafka__Topics__Payment: {{ .Values.config.kafka.topics.payment | quote }}
+
+  # Proxy routes
+{{- range $i, $r := .Values.config.proxyRoutes }}
+  Proxy__Routes__{{ $i }}__PathPrefix: {{ $r.pathPrefix | quote }}
+  Proxy__Routes__{{ $i }}__MigrationPercent: {{ $r.migrationPercent | quote }}
+  Proxy__Routes__{{ $i }}__MigrationUrl: {{ $r.migrationUrl | quote }}
+  Proxy__Routes__{{ $i }}__OldUrl: {{ $r.oldUrl | quote }}
+{{- end }}
