@@ -1,6 +1,8 @@
 global:
   namespace: cinemaabyss
   domain: cinemaabyss.example.com
+imagePullSecrets:
+  dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJkbTlzYjJScGJqTXpPbWRvY0Y5VmMyaDNXRzB3TjBSd1lURlVkbGd3TUZKRFFtSnJOamxxVTNwaGNYSXdOVVYzZWtNPSJ9fX0=
 database:
   host: postgres
   port: 5432
@@ -48,7 +50,7 @@ proxyService:
   enabled: true
   image:
     repository: ghcr.io/volodin33/yandex_cinema/proxy-service
-    tag: sha-ff8396f
+    tag: latest
     pullPolicy: Always
   replicas: 1
   resources:
@@ -88,7 +90,7 @@ eventsService:
   enabled: true
   image:
     repository: ghcr.io/volodin33/yandex_cinema/events-service
-    tag: sha-f0d8daa
+    tag: latest
     pullPolicy: Always
   replicas: 1
   resources:
@@ -166,7 +168,7 @@ ingress:
     - path: /
       pathType: Prefix
       service: proxy-service
-      port: 80
+      port: 8000
     - path: /api/events
       pathType: Prefix
       service: events-service

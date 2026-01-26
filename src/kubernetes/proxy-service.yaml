@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: proxy-service
-          image: ghcr.io/volodin33/yandex_cinema/proxy-service:sha-ff8396f
+          image: ghcr.io/volodin33/yandex_cinema/proxy-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
