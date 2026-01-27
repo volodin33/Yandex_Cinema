@@ -10,14 +10,20 @@ public class RouteSelector(IOptions<ProxyOptions> config)
 
     public string? GetRoute(HttpContext ctx)
     {
-        PathString tail = default;
         ProxyRouteConfig? routeCfg = null;
         var path = ctx.Request.Path;
+        PathString tail = path;
         
         foreach (var route in config.Value.Routes)
         {
-            if (path.StartsWithSegments(route.PathPrefix, out tail))
+            if (route.PathPrefix == "/")
             {
+                routeCfg = route;
+            }
+
+            if (path.StartsWithSegments(route.PathPrefix, out var t))
+            {
+                tail = t;
                 routeCfg = route;
                 break;
             }
@@ -26,17 +32,20 @@ public class RouteSelector(IOptions<ProxyOptions> config)
         if (routeCfg is null)
             return null;
 
-        if (routeCfg.MigrationPercent >= 100) 
-            return routeCfg.MigrationUrl;
+        var targetRoute = routeCfg.MigrationUrl;
         
-        if (routeCfg.MigrationPercent <= 0) 
-            return routeCfg.OldUrl;
+        if (routeCfg.MigrationPercent <= 0)
+        {
+            targetRoute = routeCfg.OldUrl;
+        }
+        else if (routeCfg.MigrationPercent < 100)
+        {
+            var n = RequestCounters.AddOrUpdate(routeCfg.PathPrefix, 1L, (_, cur) => cur + 1);
+            var requestSlot = (int) ((n - 1) % WindowSize);
+            var oldUrlSlot = routeCfg.MigrationPercent * WindowSize / 100;
+            targetRoute = requestSlot < oldUrlSlot ? routeCfg.MigrationUrl : routeCfg.OldUrl;
+        }
 
-        var n = RequestCounters.AddOrUpdate(routeCfg.PathPrefix, 1L, (_, cur) => cur + 1);
-        var requestSlot = (int) ((n - 1) % WindowSize);
-        var oldUrlSlot = routeCfg.MigrationPercent * WindowSize / 100;
-        var targetRoute = requestSlot < oldUrlSlot ? routeCfg.MigrationUrl : routeCfg.OldUrl;
-        
         return BuildUrl(targetRoute, tail, ctx.Request.QueryString);
     }
     

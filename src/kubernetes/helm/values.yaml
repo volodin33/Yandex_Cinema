@@ -189,7 +189,7 @@ config:
     migrationPercent: '50'
     migrationUrl: http://movies-service:8081/api/movies
     oldUrl: http://monolith:8080/api/movies
-  - pathPrefix: /api/users
+  - pathPrefix: /
     migrationPercent: '0'
     migrationUrl: ''
-    oldUrl: http://monolith:8080/api/users
+    oldUrl: http://monolith:8080
