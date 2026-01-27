@@ -1,0 +1,83 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+title Кинобездна — To-Be
+
+Person(user, "Пользователь", "Смотрит контент, оценивает фильмы, добавляет в избранное")
+
+System_Ext(pay, "Платёжная система", "Провайдер эквайринга/платежей")
+System_Ext(cinemas, "Онлайн-кинотеатры / поставщики контента", "Внешние источники контента")
+System_Ext(s3, "S3-хранилище / CDN", "Доставка статики и видеопотока")
+System_Ext(recSys, "Внешняя рекомендательная система", "Строит подборки рекомендаций")
+SystemQueue_Ext(rmq, "RabbitMQ (внешний)", "Очередь сообщений внешней рекомендательной системы")
+
+AddElementTag("legacy", $bgColor="yellow", $borderColor="red", $fontColor="gray")
+
+System_Boundary(kb, "Онлайн-кинотеатр «Кинобездна»") {
+ 
+ Boundary(domCatalog, "Домен: Контент") {
+   Container(contentAccess, "ContentAccess Service", "ASP.NET Core", "Проверка прав доступа к контенту и выдача ссылок.")
+   Container(movieService, "Movie Service", "ASP.NET Core", "Метаданные фильмов: карточки, жанры, актёры, рейтинги, постеры/описания.")
+   ContainerDb(movieDb, "Movie DB", "PostgreSQL", "Каталог и метаданные.")
+ }
+  Container(apiGateway, "API Gateway", "ASP.NET Core", "Единая точка входа для API. Маршрутизация, агрегация под устройства, авторизация, лимиты.")
+
+  Boundary(domMoney, "Домен: Монетизация") {
+    Container(subs, "Subscription/Billing Service", "ASP.NET Core", "Подписки, тарифы, скидки/промокоды, оплаты и статусы.")
+    ContainerDb(subsDb, "Billing DB", "PostgreSQL", "Подписки, платежи, скидки, статусы.")
+  }
+
+  Boundary(domReco, "Домен: Интеграции") {
+    Container(recAdapter, "Recommendations Adapter", "ASP.NET Core", "Адаптер: потребляет события из Kafka и общается с внешней рекомендательной системой через RabbitMQ.")
+  }
+
+   ContainerQueue(kafka, "Kafka", "Kafka", "Шина событий: действия пользователя события системы.")
+
+  Boundary(domLegacy, "Монолит Legacy (только на период миграции)") {
+    Container(legacy, "Legacy Monolith", "Go", "Старый монолит. На время миграции обслуживает функции, которые ещё не вынесены.", $tags="legacy")
+    ContainerDb(legacyDb, "Legacy DB", "PostgreSQL", "Единая база монолита (платежи, пользователи, видео, подписки, метаданные и т.д.).", , $tags="legacy")
+  }
+ 
+    Boundary(domIdentity, "Домен: Пользователи") {
+        Container(auth, "Users Service", "ASP.NET Core", "Аутентификация/авторизация, управление сессиями/токенами.")
+        ContainerDb(userDb, "User DB", "PostgreSQL", "Пользователи, учётные данные, сессии/токены.")
+        Container(profile, "User Profile Service", "ASP.NET Core", "Избранное, оценки, история/прогресс просмотра, предпочтения.")
+        ContainerDb(profileDb, "Profile DB", "PostgreSQL", "Данные профиля и пользовательские действия.")
+      }
+
+}
+
+Rel(user, apiGateway, "Использует API", "HTTPS (REST)")
+Rel(user, s3, "Получает видеопоток")
+
+Rel(apiGateway, auth, "Аутентификация/авторизация", "HTTPS (REST)")
+Rel(apiGateway, movieService, "Метаданные/каталог", "HTTPS (REST)")
+Rel(apiGateway, profile, "Избранное/оценки/история", "HTTPS (REST)")
+Rel(apiGateway, subs, "Подписка/оплата/скидки", "HTTPS (REST)")
+Rel(apiGateway, contentAccess, "Разрешение на просмотр и выдача URL/токена", "HTTPS (REST)")
+
+Rel(apiGateway, legacy, "Функции, ещё не вынесенные из монолита", "HTTPS (REST)")
+
+Rel(auth, userDb, "Читает/пишет", "SQL")
+Rel(movieService, movieDb, "Читает/пишет", "SQL")
+Rel(profile, profileDb, "Читает/пишет", "SQL")
+Rel(subs, subsDb, "Читает/пишет", "SQL")
+Rel(legacy, legacyDb, "Читает/пишет", "SQL")
+
+Rel(subs, pay, "Проводит платежи, получает статусы", "HTTPS")
+Rel(contentAccess, cinemas, "Проверяет/получает параметры источника", "HTTPS (API)")
+Rel(movieService, s3, "Управляет постерами/статикой", "S3 API")
+Rel(contentAccess, s3, "Генерирует ссылки/токены", "S3 API")
+
+Rel(profile, kafka, "Публикует события действий пользователя", "Kafka")
+Rel(subs, kafka, "Публикует бизнес-события (подписка/платёж)", "Kafka")
+
+Rel(recAdapter, kafka, "Потребляет события", "Kafka")
+Rel(recAdapter, rmq, "Отправляет/получает сообщения", "AMQP")
+Rel(rmq, recSys, "Очереди сообщений", "AMQP")
+Rel(recSys, rmq, "Публикует результаты рекомендаций", "AMQP")
+
+Rel(recAdapter, profile, "Сохраняет/кэширует рекомендации (опционально)", "HTTPS (REST)")
+
+@enduml
