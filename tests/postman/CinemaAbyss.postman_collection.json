@@ -784,7 +784,7 @@
     },
     {
       "key": "proxyServiceUrl",
-      "value": "http://cinemaabyss.example.com"
+      "value": "http://localhost:8000"
     },
     {
       "key": "userId",

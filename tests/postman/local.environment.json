@@ -16,13 +16,13 @@
     },
     {
       "key": "eventsServiceUrl",
-      "value": "http://cinemaabyss.example.com",
+      "value": "http://localhost:8082",
       "type": "default",
       "enabled": true
     },
     {
       "key": "proxyServiceUrl",
-      "value": "http://cinemaabyss.example.com",
+      "value": "http://localhost:8000",
       "type": "default",
       "enabled": true
     }
